@@ -1,0 +1,16 @@
+name: Email-Send-Test
+version: 0.01
+abstract: Email::Send mailer for use in testing
+author: Adam Kennedy<cpan@ali.as>
+license: perl
+distribution_type: module
+build_requires:
+  Test::More: 0.47
+  File::Spec: 0.82
+requires:
+  perl: 5.005
+  Email::Send: 1.42
+no_index:
+  directory:
+    - inc
+generated_by: Module::Install version 0.35
