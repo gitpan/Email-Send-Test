@@ -1,4 +1,7 @@
 Revision history for Perl extension Email::Send::Test
 
-0.01  Tue Oct  5 2004
+0.02 Tue Feb 15 2005
+	- Removing braindead pass-through Build.PL file
+
+0.01 Tue Oct  5 2004
 	- Created the initial implementation

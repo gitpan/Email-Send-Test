@@ -60,7 +60,7 @@ use strict;
 
 use vars qw{$VERSION @emails};
 BEGIN {
-	$VERSION = '0.01';
+	$VERSION = '0.02';
 	@emails  = ();
 }
 
@@ -125,7 +125,7 @@ All bugs should be filed via the CPAN bug tracker at
 
 L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Email%3A%3ASend%3A%3ATest>
 
-For other issues, contact the author
+For other issues, or commercial enhancement or support, contact the author.
 
 =head1 AUTHORS
 
