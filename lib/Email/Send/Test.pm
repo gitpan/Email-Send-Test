@@ -10,109 +10,136 @@ Email::Send::Test - Captures emails sent via Email::Send for testing
 
   # Load as normal
   use Email::Send;
+  use Email::Send::Test;
   
-  # Send the email
-  send Test => $message;
-  
-  # Check something was sent
-  is( scalar(Email::Send::Test->emails), 1, 'Sent 1 email' );
-  
-  # Check the contents (using the variable directly)
-  isa_ok( $Email::Send::Test::emails[0], 'Email::MIME' );
-  
-  # Reset the variable (OO and directly)
+  # Always clear the email trap before each test to prevent unexpected
+  # results, and thus spurious test results.
   Email::Send::Test->clear;
-  @Email::Send::Test::emails = ();
+  
+  ### BEGIN YOUR CODE TO BE TESTED (example follows)
+  my $sender = Email::Send->new({ mailer => 'Test' });
+  $sender->send( $message );
+  ### END YOUR CODE TO BE TESTED
+  
+  # Check that the number and type (and content) of mails
+  # matched what you expect.
+  my @emails = Email::Send::Test->emails;
+  is( scalar(@emails), 1, 'Sent 1 email' );
+  isa_ok( $emails[0], 'Email::MIME' );
 
 =head1 DESCRIPTION
 
-Email::Send::Test is a module for testing applications that use Email::Send
-to send email. In particular, it kind of assumes that you use some sort of
-configuration file to specify the "channel" to dispatch mail to, or
-something else that can be easily overloaded or altered in the test script.
+Email::Send::Test is a driver for use in testing applications that use
+L<Email::Send> to send email.
+
+To be able to use it in testing, you will need some sort of configuration
+mechanism to specify the delivery method to be used, or some other way
+that in your testing scripts you can convince your code to use "Test" as
+the mailer, rather than "Sendmail" or another real mailer.
 
 =head2 How does it Work
 
-Email::Send::Test is simple a trap. As emails come in, it just puts them
-onto an array totally intact as it was given them. If you send one email,
-there will be one in the trap. If you send 20, there will be 20, and so
-on.
+Email::Send::Test is a trap for emails. When an email is sent, it adds the
+emails to an internal array without doing anything at all to them, and
+returns success to the caller.
 
-A typical test will involve doing some task that SHOULD trigger an email,
-and then checking in the trap to see if the application did, in fact, try
-to send out the email.
+If your application sends one email, there will be one in the trap. If you
+send 20, there will be 20, and so on.
 
-If you wish you can pull the emails out the trap and examine them. If you
+A typical test will involve doing running some code that B<should> result
+in an email being sent, and then checking in the trap to see if the
+code did actually send out the email.
+
+If you want you can get the emails out the trap and examine them. If you
 only care that something got sent you can simply clear the trap and move
-on to the next test.
+on to your next test.
 
 =head2 The Email Trap
 
-The email trap is simple a global array, C<@Email::Send::Test::emails>.
-When you send an email, it is simply pushed onto the array. You can access
-the array directly if you wish, or use the methods provided.
+The email trap is a simple array fills with whatever is sent.
+
+When you send an email, it is pushed onto the end of the array. You can
+access the array directly if you wish, or use the methods provided.
 
 =head1 METHODS
 
 =cut
 
+use 5.005;
 use strict;
 
-use vars qw{$VERSION @emails};
+use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.02';
-	@emails  = ();
+	$VERSION = '2.00';
 }
+
+# No longer allow direct access to the array
+my @EMAILS = ();
+
+# This mailer is always available
+sub is_available { 1 }
 
 =pod
 
 =head2 send $message
 
-As for every other Email::Send mailer, C<send> takes the message to be sent.
+As for every other L<Email::Send> mailer, C<send> takes the message to be
+sent.
 
 However, in our case there are no arguments of any value to us, and so they
 are ignored.
 
-It is worth nothing that we do NOTHING to examine the email. If we are
-passed C<undef> for example, we simply push C<undef> onto the trap. In this
-manner, you can see exactly what was sent.
+It is worth nothing that we do NOTHING to check or alter the email. For
+example, if we are passed C<undef> it ends up as is in the trap. In this
+manner, you can see B<exactly> what was sent without any possible tampering
+on the part of the testing mailer.
+
+Of course, this doesn't prevent any tampering by Email::Send itself :)
 
 Always returns true.
 
 =cut
 
 sub send {
-	push @emails, shift;
-	1;
+	my $class = shift;
+	push @EMAILS, @_;
+	return 1;
 }
 
 =pod
 
 =head2 emails
 
-For the OO entusiasts, the C<emails> method simply returns, as a list, the
-contents of the email trap.
+The C<emails> method is the prefered and recommended method of getting
+access to the email trap.
+
+In list context, returns the content of the trap array as a list.
 
 In scalar context, returns the number of items in the trap.
 
 =cut
 
 sub emails {
-	wantarray ? @emails : scalar @emails;
+	wantarray ? @EMAILS : scalar(@EMAILS);
 }
 
 =pod
 
 =head2 clear
 
-The C<clear> method simply resets the trap, emptying it.
+The C<clear> method resets the trap, emptying it.
 
-Always returns true
+It is recommended you always clear the trap before each
+test to ensure any existing emails are removed and don't
+create a spurious test result.
+
+Always returns true.
 
 =cut
 
 sub clear {
-	@emails = (); 1;
+	@EMAILS = ();
+	return 1;
 }
 
 1;
@@ -123,17 +150,17 @@ sub clear {
 
 All bugs should be filed via the CPAN bug tracker at
 
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Email%3A%3ASend%3A%3ATest>
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Email-Send-Test>
 
 For other issues, or commercial enhancement or support, contact the author.
 
 =head1 AUTHORS
 
-Adam Kennedy (Maintainer), L<http://ali.as/>, cpan@ali.as
+Adam Kennedy E<lt>cpan@ali.asE<gt>, L<http://ali.as/>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 Adam Kennedy. All rights reserved.
+Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved.
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 
